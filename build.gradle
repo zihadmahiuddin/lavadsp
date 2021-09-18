@@ -3,10 +3,9 @@ plugins {
     id 'maven'
     id 'maven-publish'
     id 'com.github.johnrengelman.shadow' version '6.1.0'
-    id 'com.jfrog.bintray' version '1.8.5'
 }
 
-def versionObj = new Version(major: 0, minor: 7, revision: 7)
+def versionObj = new Version(major: 0, minor: 7, revision: 8)
 
 group 'com.github.natanbc'
 version "${versionObj}"
@@ -15,14 +14,20 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 repositories {
-    jcenter()
+    mavenCentral()
+    maven {
+        url = "https://m2.dv8tion.net/releases"
+    }
+    maven {
+        url = "https://maven.zihad.dev"
+    }
 }
 
 dependencies {
     implementation 'org.slf4j:slf4j-api:1.7.30'
-    implementation 'com.github.natanbc:native-loader:0.7.0'
-    compileOnly 'com.sedmelluq:lavaplayer:1.3.66'
-    testCompile 'com.sedmelluq:lavaplayer:1.3.66'
+    implementation 'com.github.natanbc:native-loader:0.7.1'
+    compileOnly 'com.sedmelluq:lavaplayer:1.3.77'
+    testCompile 'com.sedmelluq:lavaplayer:1.3.77'
     testCompile 'ch.qos.logback:logback-classic:1.2.3'
 }
 
@@ -72,36 +77,22 @@ task javadocJar(type: Jar, dependsOn: javadoc) {
 
 publishing {
     publications {
-        BintrayRelease(MavenPublication) {
+        library(MavenPublication) {
             from components.java
-            groupId group
-            artifactId archivesBaseName
-
-            artifact sourcesJar {
-                classifier 'sources'
-            }
-
-            artifact javadocJar {
-                classifier 'javadoc'
-            }
         }
     }
-}
 
-bintray {
-    version = "${versionObj}"
-    user = getProjectProperty("BINTRAY_USERNAME")
-    key = getProjectProperty("BINTRAY_API_KEY")
-    publications = ["BintrayRelease"]
-    pkg {
-        repo = 'maven'
-        name = project.name
-        licenses = ['Apache-2.0']
-        vcsUrl = 'https://github.com/natanbc/lavadsp.git'
-        publish = true
-        version {
-            name = project.version.toString()
-            released = new Date()
+    repositories {
+        maven {
+            url = uri("https://maven.zihad.dev")
+            name = "repository"
+            credentials {
+                username = getProjectProperty("MAVEN_USERNAME")
+                password = getProjectProperty("MAVEN_PASSWORD")
+            }
+            authentication {
+                basic(BasicAuthentication)
+            }
         }
     }
 }
@@ -114,13 +105,6 @@ String getProjectProperty(String propertyName) {
         property = System.getenv(propertyName) ?: ""
     }
     return property
-}
-
-bintrayUpload {
-    dependsOn shadowJar
-
-    onlyIf { !getProjectProperty("BINTRAY_USERNAME").empty }
-    onlyIf { !getProjectProperty("BINTRAY_API_KEY").empty }
 }
 
 static def getCommitHash() {

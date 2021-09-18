@@ -81,42 +81,6 @@ jobs:
         with:
           name: linux-arm-natives
           path: src/main/resources/natives/*
-  mac-natives:
-    runs-on: ubuntu-20.04
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Cache natives
-        uses: actions/cache@v2
-        id: cache-natives
-        with:
-          path: |
-            src/main/resources/natives/darwin
-          key: mac-${{ hashFiles('natives/**') }}
-      - name: Set up JDK
-        uses: actions/setup-java@v1
-        if: steps.cache-natives.outputs.cache-hit != 'true'
-        with:
-          java-version: 15
-      - name: Install darwin compiler
-        if: steps.cache-natives.outputs.cache-hit != 'true'
-        run: |
-          curl -sL https://github.com/natanbc/actions-binaries/releases/download/1/osxcross.tar.gz -o - | tar -xzf -
-          sudo add-apt-repository "deb http://security.ubuntu.com/ubuntu xenial-security main"
-          sudo apt update
-          sudo apt install libssl1.0.0
-      - name: Build darwin natives
-        if: steps.cache-natives.outputs.cache-hit != 'true'
-        run: |
-          chmod +x gradlew
-          export PATH="$PATH:$(pwd)/osxcross/bin"
-          export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(pwd)/osxcross/lib"
-          ./gradlew buildDarwin64
-      - uses: actions/upload-artifact@v2
-        with:
-          name: mac-natives
-          path: src/main/resources/natives/*
   freebsd-natives:
     runs-on: ubuntu-20.04
     steps:
@@ -178,7 +142,7 @@ jobs:
           name: windows-natives
           path: src/main/resources/natives/*
   build:
-    needs: [linux-x86-natives, linux-arm-natives, mac-natives, freebsd-natives, windows-natives]
+    needs: [linux-x86-natives, linux-arm-natives, freebsd-natives, windows-natives]
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -190,10 +154,6 @@ jobs:
       - uses: actions/download-artifact@v2
         with:
           name: linux-arm-natives
-          path: src/main/resources/natives/
-      - uses: actions/download-artifact@v2
-        with:
-          name: mac-natives
           path: src/main/resources/natives/
       - uses: actions/download-artifact@v2
         with:
@@ -212,13 +172,13 @@ jobs:
         with:
           name: jar
           path: build/libs/*.jar
-      - name: Bintray upload
+      - name: Maven upload
         if: startsWith(github.ref, 'refs/tags/')
         run: |
           export TAG="$(echo $GITHUB_REF | grep -q refs/tags && echo ${GITHUB_REF/refs\/tags\/} || echo '')"
           if [ "$TAG" != "" ]; then
-            ./gradlew bintrayUpload
+            ./gradlew publish
           fi
         env:
-          BINTRAY_USERNAME: ${{ secrets.BINTRAY_USERNAME }}
-          BINTRAY_API_KEY: ${{ secrets.BINTRAY_API_KEY }}
+          MAVEN_USERNAME: ${{ secrets.MAVEN_USERNAME }}
+          MAVEN_PASSWORD: ${{ secrets.MAVEN_PASSWORD }}
