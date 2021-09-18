@@ -1,4 +1,4 @@
-[ ![Download](https://api.bintray.com/packages/natanbc/maven/lavadsp/images/download.svg) ](https://bintray.com/natanbc/maven/lavadsp/_latestVersion)
+[Download](https://maven.zihad.dev/releases/com/github/natanbc/lavadsp)
 
 # lavadsp
 
@@ -15,9 +15,9 @@ Replace `VERSION` with the version you want to use. The latest version can be fo
 ```xml
 <repositories>
     <repository>
-        <id>jcenter</id>
-        <name>jcenter</name>
-        <url>http://jcenter.bintray.com/</url>
+        <id>zihad-maven</id>
+        <name>zihad-maven</name>
+        <url>https://maven.zihad.dev/</url>
     </repository>
 </repositories>
 
@@ -34,7 +34,9 @@ Replace `VERSION` with the version you want to use. The latest version can be fo
 
 ```gradle
 repositories {
-    jcenter()
+  maven {
+    url = "https://maven.zihad.dev"
+  }
 }
 
 dependencies {
